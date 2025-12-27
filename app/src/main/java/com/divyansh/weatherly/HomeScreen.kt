@@ -1,5 +1,10 @@
 package com.divyansh.weatherly
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -35,6 +40,7 @@ fun HomeScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
+        // 🔍 Search Bar
         OutlinedTextField(
             value = city,
             onValueChange = { city = it },
@@ -42,9 +48,10 @@ fun HomeScreen(
             placeholder = { Text("Search city") },
             leadingIcon = { Icon(Icons.Default.Search, null) },
             trailingIcon = {
-                IconButton(onClick = {
-                    weatherViewModel.fetchWeather(city)
-                }) {
+                IconButton(
+                    onClick = { weatherViewModel.fetchWeather(city) },
+                    modifier = Modifier.size(48.dp)
+                ) {
                     Icon(Icons.Default.Search, null)
                 }
             },
@@ -58,12 +65,20 @@ fun HomeScreen(
             }
 
             is WeatherUiState.Loading -> {
-                CircularProgressIndicator()
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = OceanAccent,
+                        strokeWidth = 3.dp
+                    )
+                }
             }
 
             is WeatherUiState.Error -> {
                 Text(
-                    weatherState.message,
+                    text = weatherState.message,
                     color = MaterialTheme.colorScheme.error
                 )
             }
@@ -71,32 +86,141 @@ fun HomeScreen(
             is WeatherUiState.Success -> {
                 val data = weatherState.data
 
-                Text(
-                    "${data.name}  ${data.main.temp.toInt()}°C",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                if (hourly.isNotEmpty()) {
-                    Text("Hourly Forecast")
-
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                AnimatedVisibility(
+                    visible = true,
+                    enter = fadeIn() + slideInVertically { it / 2 },
+                    exit = fadeOut() + slideOutVertically()
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        items(hourly) {
-                            Card {
-                                Column(
-                                    modifier = Modifier.padding(12.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(it.dt_txt.takeLast(8))
-                                    Text("${it.main.temp.toInt()}°C")
+
+                        // 🌦 Main Weather Card
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(26.dp),
+                            elevation = CardDefaults.cardElevation(10.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = OceanCard
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Cloud,
+                                    contentDescription = null,
+                                    tint = OceanAccent,
+                                    modifier = Modifier.size(72.dp)
+                                )
+
+                                Text(
+                                    text = data.name,
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                Text(
+                                    text = "${data.main.temp.toInt()}°C",
+                                    fontSize = 40.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+
+                                Text(
+                                    text = data.weather[0].description,
+                                    color = MaterialTheme.colorScheme
+                                        .onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+
+                        // ⏱ Hourly Forecast
+                        if (hourly.isNotEmpty()) {
+
+                            Text(
+                                text = "Hourly Forecast",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(hourly) { item ->
+                                    Card(
+                                        shape = RoundedCornerShape(14.dp),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = OceanCard
+                                        )
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(12.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(item.dt_txt.takeLast(8))
+                                            Text(
+                                                "${item.main.temp.toInt()}°C",
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
                                 }
                             }
+                        }
+
+                        // 📊 Info Cards
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            InfoCard(
+                                title = "Humidity",
+                                value = "${data.main.humidity}%",
+                                icon = Icons.Default.WaterDrop,
+                                modifier = Modifier.weight(1f)
+                            )
+                            InfoCard(
+                                title = "Wind",
+                                value = "${data.wind.speed} km/h",
+                                icon = Icons.Default.Air,
+                                modifier = Modifier.weight(1f)
+                            )
+                            InfoCard(
+                                title = "Feels Like",
+                                value = "${data.main.temp.toInt()}°C",
+                                icon = Icons.Default.Cloud,
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun InfoCard(
+    title: String,
+    value: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(18.dp),
+        elevation = CardDefaults.cardElevation(6.dp),
+        colors = CardDefaults.cardColors(containerColor = OceanCard)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(icon, null, tint = OceanAccent)
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(title, fontSize = 12.sp)
+            Text(value, fontWeight = FontWeight.Bold)
         }
     }
 }
