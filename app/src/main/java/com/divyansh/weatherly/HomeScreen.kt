@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -118,11 +119,12 @@ fun HomeScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Icon(
-                                    Icons.Default.Cloud,
-                                    null,
+                                    imageVector = getWeatherIcon(data.weather[0].main),
+                                    contentDescription = data.weather[0].main,
                                     tint = OceanAccent,
                                     modifier = Modifier.size(72.dp)
                                 )
+
 
                                 Text(
                                     data.name,
@@ -183,5 +185,18 @@ fun HomeScreen(
                 }
             }
         }
+    }
+}
+@Composable
+fun getWeatherIcon(condition: String): ImageVector {
+    return when (condition.lowercase()) {
+        "clear" -> Icons.Default.WbSunny
+        "clouds" -> Icons.Default.Cloud
+        "rain" -> Icons.Default.Umbrella
+        "drizzle" -> Icons.Default.Grain
+        "thunderstorm" -> Icons.Default.FlashOn
+        "snow" -> Icons.Default.AcUnit
+        "mist", "fog", "haze", "smoke" -> Icons.Default.BlurOn
+        else -> Icons.Default.Cloud
     }
 }
