@@ -1,19 +1,13 @@
 package com.divyansh.weatherly
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Air
-import androidx.compose.material.icons.filled.Cloud
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,7 +20,9 @@ import com.divyansh.weatherly.ui.theme.*
 
 @Composable
 fun HomeScreen(
-    weatherViewModel: WeatherViewModel = viewModel()
+    weatherViewModel: WeatherViewModel = viewModel(),
+    isDarkMode: Boolean,
+    onToggleTheme: () -> Unit
 ) {
     var city by remember { mutableStateOf("") }
 
@@ -36,11 +32,28 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
-        // 🔍 Search Bar
+        /* 🌙 DARK MODE TOGGLE */
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            IconButton(onClick = onToggleTheme) {
+                Icon(
+                    imageVector = if (isDarkMode)
+                        Icons.Default.LightMode
+                    else
+                        Icons.Default.DarkMode,
+                    contentDescription = "Toggle Theme"
+                )
+            }
+        }
+
+        /* 🔍 SEARCH BAR */
         OutlinedTextField(
             value = city,
             onValueChange = { city = it },
@@ -49,8 +62,7 @@ fun HomeScreen(
             leadingIcon = { Icon(Icons.Default.Search, null) },
             trailingIcon = {
                 IconButton(
-                    onClick = { weatherViewModel.fetchWeather(city) },
-                    modifier = Modifier.size(48.dp)
+                    onClick = { weatherViewModel.fetchWeather(city) }
                 ) {
                     Icon(Icons.Default.Search, null)
                 }
@@ -89,19 +101,16 @@ fun HomeScreen(
                 AnimatedVisibility(
                     visible = true,
                     enter = fadeIn() + slideInVertically { it / 2 },
-                    exit = fadeOut() + slideOutVertically()
+                    exit = fadeOut()
                 ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
 
-                        // 🌦 Main Weather Card
+                        /* 🌦 WEATHER CARD */
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(26.dp),
-                            elevation = CardDefaults.cardElevation(10.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = OceanCard
+                                containerColor = MaterialTheme.colorScheme.surface
                             )
                         ) {
                             Column(
@@ -109,39 +118,39 @@ fun HomeScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Cloud,
-                                    contentDescription = null,
+                                    Icons.Default.Cloud,
+                                    null,
                                     tint = OceanAccent,
                                     modifier = Modifier.size(72.dp)
                                 )
 
                                 Text(
-                                    text = data.name,
+                                    data.name,
                                     fontSize = 22.sp,
                                     fontWeight = FontWeight.Bold
                                 )
 
                                 Text(
-                                    text = "${data.main.temp.toInt()}°C",
+                                    "${data.main.temp.toInt()}°C",
                                     fontSize = 40.sp,
                                     fontWeight = FontWeight.SemiBold
                                 )
 
                                 Text(
-                                    text = data.weather[0].description,
+                                    data.weather[0].description,
                                     color = MaterialTheme.colorScheme
-                                        .onSurface.copy(alpha = 0.6f)
+                                        .onSurface.copy(alpha = 0.7f)
                                 )
                             }
                         }
 
-                        // ⏱ Hourly Forecast
+                        /* ⏱ HOURLY FORECAST */
                         if (hourly.isNotEmpty()) {
-
                             Text(
-                                text = "Hourly Forecast",
+                                "Hourly Forecast",
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
+                                        color = OceanAccent
                             )
 
                             LazyRow(
@@ -151,12 +160,14 @@ fun HomeScreen(
                                     Card(
                                         shape = RoundedCornerShape(14.dp),
                                         colors = CardDefaults.cardColors(
-                                            containerColor = OceanCard
+                                            containerColor =
+                                                MaterialTheme.colorScheme.surface
                                         )
                                     ) {
                                         Column(
                                             modifier = Modifier.padding(12.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally
+                                            horizontalAlignment =
+                                                Alignment.CenterHorizontally
                                         ) {
                                             Text(item.dt_txt.takeLast(8))
                                             Text(
@@ -168,59 +179,9 @@ fun HomeScreen(
                                 }
                             }
                         }
-
-                        // 📊 Info Cards
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            InfoCard(
-                                title = "Humidity",
-                                value = "${data.main.humidity}%",
-                                icon = Icons.Default.WaterDrop,
-                                modifier = Modifier.weight(1f)
-                            )
-                            InfoCard(
-                                title = "Wind",
-                                value = "${data.wind.speed} km/h",
-                                icon = Icons.Default.Air,
-                                modifier = Modifier.weight(1f)
-                            )
-                            InfoCard(
-                                title = "Feels Like",
-                                value = "${data.main.temp.toInt()}°C",
-                                icon = Icons.Default.Cloud,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun InfoCard(
-    title: String,
-    value: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(18.dp),
-        elevation = CardDefaults.cardElevation(6.dp),
-        colors = CardDefaults.cardColors(containerColor = OceanCard)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(icon, null, tint = OceanAccent)
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(title, fontSize = 12.sp)
-            Text(value, fontWeight = FontWeight.Bold)
         }
     }
 }
