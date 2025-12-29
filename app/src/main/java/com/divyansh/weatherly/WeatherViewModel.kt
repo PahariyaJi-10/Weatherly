@@ -16,39 +16,67 @@ class WeatherViewModel : ViewModel() {
         MutableStateFlow<List<ForecastItem>>(emptyList())
     val hourlyForecast: StateFlow<List<ForecastItem>> = _hourlyForecast
 
-    // ⚠️ PUT YOUR REAL KEY HERE (do not commit real key)
-    private val apiKey ="6d1f33003b2afd1a9d717b682d6fd36b"
+    // ⚠️ DO NOT COMMIT REAL KEY
+    private val apiKey = "6d1f33003b2afd1a9d717b682d6fd36b"
 
-    fun fetchWeather(city: String) {
-        if (city.isBlank()) return
+    fun fetchWeather(query: String) {
+        if (query.isBlank()) return
 
         _weatherState.value = WeatherUiState.Loading
 
         viewModelScope.launch {
             try {
-                // 🌦 Current weather
+                /* 1️⃣ GEOCODING — convert any place to lat/lon */
+                val locations = RetrofitInstance.geoCodingApi
+                    .getLocation(
+                        city = query,
+                        apiKey = apiKey
+                    )
+
+                if (locations.isEmpty()) {
+                    _weatherState.value =
+                        WeatherUiState.Error("Location not found. Try a nearby city.")
+                    return@launch
+                }
+
+                val location = locations.first()
+                val lat = location.lat
+                val lon = location.lon
+
+                /* 2️⃣ CURRENT WEATHER (lat/lon based) */
                 val weatherResponse =
-                    RetrofitInstance.weatherApi.getWeather(city, apiKey)
+                    RetrofitInstance.weatherApi
+                        .getWeatherByLatLon(
+                            lat = lat,
+                            lon = lon,
+                            apiKey = apiKey
+                        )
 
                 _weatherState.value =
                     WeatherUiState.Success(weatherResponse)
 
-                // ⏱ Hourly forecast (safe)
+                /* 3️⃣ HOURLY FORECAST (safe call) */
                 try {
                     val forecastResponse =
-                        RetrofitInstance.forecastApi
-                            .getHourlyForecast(city, apiKey)
+                        RetrofitInstance.weatherApi
+                            .getHourlyForecast(
+                                lat = lat,
+                                lon = lon,
+                                apiKey = apiKey
+                            )
 
                     _hourlyForecast.value =
                         forecastResponse.list.take(6)
 
                 } catch (e: Exception) {
+                    // Forecast failure should NOT break weather
                     _hourlyForecast.value = emptyList()
                 }
 
             } catch (e: Exception) {
                 _weatherState.value =
-                    WeatherUiState.Error("City not found or API error")
+                    WeatherUiState.Error("Unable to fetch weather. Check internet.")
+                _hourlyForecast.value = emptyList()
             }
         }
     }
