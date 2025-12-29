@@ -17,7 +17,7 @@ class WeatherViewModel : ViewModel() {
     val hourlyForecast: StateFlow<List<ForecastItem>> = _hourlyForecast
 
     // ⚠️ DO NOT COMMIT REAL KEY
-    private val apiKey = "6d1f33003b2afd1a9d717b682d6fd36b"
+    private val apiKey = "YOUR_API_KEY"
 
     fun fetchWeather(query: String) {
         if (query.isBlank()) return
