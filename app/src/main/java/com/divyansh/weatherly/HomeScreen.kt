@@ -2,36 +2,35 @@ package com.divyansh.weatherly
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Cloud
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.divyansh.weatherly.ui.theme.OceanAccent
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
+
+
+
 @Composable
 fun HomeScreen(
     isDarkMode: Boolean,
     onToggleTheme: () -> Unit,
     weatherViewModel: WeatherViewModel = viewModel()
 ) {
-    val weatherState by weatherViewModel.weatherState.collectAsState()
+    val state by weatherViewModel.weatherState.collectAsState()
     var query by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background) // 🔥 FIX WHITE SCREEN
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
 
@@ -48,7 +47,9 @@ fun HomeScreen(
                 leadingIcon = {
                     Icon(Icons.Default.Search, contentDescription = null)
                 },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Search
+                ),
                 keyboardActions = KeyboardActions(
                     onSearch = {
                         weatherViewModel.fetchWeather(query)
@@ -56,28 +57,20 @@ fun HomeScreen(
                 )
             )
 
+
             IconButton(onClick = onToggleTheme) {
                 Icon(
-                    imageVector = if (isDarkMode)
-                        Icons.Default.LightMode
-                    else
-                        Icons.Default.DarkMode,
+                    imageVector =
+                        if (isDarkMode) Icons.Default.LightMode
+                        else Icons.Default.DarkMode,
                     contentDescription = "Toggle theme"
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(Modifier.height(24.dp))
 
-        /* 🌦 WEATHER CONTENT */
-        when (weatherState) {
-
-            WeatherUiState.Idle -> {
-                Text(
-                    "Search a city to see weather",
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            }
+        when (state) {
 
             WeatherUiState.Loading -> {
                 CircularProgressIndicator()
@@ -85,13 +78,13 @@ fun HomeScreen(
 
             is WeatherUiState.Error -> {
                 Text(
-                    text = (weatherState as WeatherUiState.Error).message,
+                    (state as WeatherUiState.Error).message,
                     color = MaterialTheme.colorScheme.error
                 )
             }
 
             is WeatherUiState.Success -> {
-                val data = (weatherState as WeatherUiState.Success).data
+                val data = (state as WeatherUiState.Success)
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -99,36 +92,46 @@ fun HomeScreen(
                         containerColor = MaterialTheme.colorScheme.surface
                     )
                 ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
+                    Column(Modifier.padding(20.dp)) {
 
-                        Icon(
-                            imageVector = Icons.Default.Cloud,
-                            contentDescription = null,
-                            tint = OceanAccent,
-                            modifier = Modifier.size(48.dp)
-                        )
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(data.data.name, fontSize = 20.sp)
+
+                            IconButton(
+                                onClick = {
+                                    weatherViewModel.toggleFavorite(
+                                        data.data.name
+                                    )
+                                }
+                            ) {
+                                Icon(
+                                    imageVector =
+                                        if (data.isFavorite)
+                                            Icons.Default.Favorite
+                                        else
+                                            Icons.Default.FavoriteBorder,
+                                    tint = OceanAccent,
+                                    contentDescription = null
+                                )
+                            }
+                        }
 
                         Text(
-                            text = data.name, // ✅ CITY NAME FIXED
-                            fontSize = 20.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        Text(
-                            text = "${data.main.temp.toInt()}°C",
-                            fontSize = 32.sp,
+                            "${data.data.main.temp.toInt()}°C",
+                            fontSize = 34.sp,
                             color = OceanAccent
                         )
 
-                        Text(
-                            text = data.weather[0].description,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Text(data.data.weather[0].description)
                     }
                 }
+            }
+
+            WeatherUiState.Idle -> {
+                Text("Search a city to see weather")
             }
         }
     }
