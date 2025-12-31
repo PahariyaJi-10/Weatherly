@@ -33,26 +33,28 @@ fun HomeScreen(
             .padding(16.dp)
     ) {
 
-        /* 🔍 SEARCH + 🌙 TOGGLE + ❤️ */
+        /* 🔍 SEARCH + 🌙 THEME + ❤️ FAVORITES */
         Row(verticalAlignment = Alignment.CenterVertically) {
+
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
                 modifier = Modifier.weight(1f),
                 placeholder = { Text("Search city") },
                 singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Search, null) }
+                leadingIcon = {
+                    Icon(Icons.Default.Search, null)
+                },
+                trailingIcon = {
+                    IconButton(onClick = { weatherViewModel.fetchWeather(query) }) {
+                        Icon(Icons.Default.Search, null)
+                    }
+                }
             )
-
-            IconButton(onClick = { weatherViewModel.fetchWeather(query) }) {
-                Icon(Icons.Default.Search, null)
-            }
 
             IconButton(onClick = onToggleTheme) {
                 Icon(
-                    imageVector =
-                        if (isDarkMode) Icons.Default.LightMode
-                        else Icons.Default.DarkMode,
+                    if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
                     contentDescription = null
                 )
             }
@@ -62,7 +64,7 @@ fun HomeScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
 
         /* ❤️ FAVORITES LIST */
         if (showFavorites) {
@@ -71,18 +73,22 @@ fun HomeScreen(
             } else {
                 LazyColumn {
                     items(favorites.toList()) { city ->
-                        Text(
-                            text = city,
+                        Card(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .padding(vertical = 6.dp)
                                 .clickable {
                                     query = city
                                     showFavorites = false
                                     weatherViewModel.fetchWeather(city)
                                 }
-                                .padding(12.dp),
-                            fontSize = 18.sp
-                        )
+                        ) {
+                            Text(
+                                text = city,
+                                modifier = Modifier.padding(16.dp),
+                                fontSize = 18.sp
+                            )
+                        }
                     }
                 }
             }
@@ -102,7 +108,7 @@ fun HomeScreen(
 
             is WeatherUiState.Error -> {
                 Text(
-                    (weatherState as WeatherUiState.Error).message,
+                    text = (weatherState as WeatherUiState.Error).message,
                     color = MaterialTheme.colorScheme.error
                 )
             }
@@ -111,13 +117,17 @@ fun HomeScreen(
                 val data = (weatherState as WeatherUiState.Success).data
                 val isFav = favorites.contains(data.name)
 
-                Card {
-                    Column(Modifier.padding(16.dp)) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
+                ) {
+                    Column(Modifier.padding(20.dp)) {
 
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(data.name, fontSize = 20.sp)
 
@@ -127,13 +137,12 @@ fun HomeScreen(
                                 }
                             ) {
                                 Icon(
-                                    imageVector =
-                                        if (isFav)
-                                            Icons.Default.Favorite
-                                        else
-                                            Icons.Default.FavoriteBorder,
-                                    tint = OceanAccent,
-                                    contentDescription = null
+                                    if (isFav)
+                                        Icons.Default.Favorite
+                                    else
+                                        Icons.Default.FavoriteBorder,
+                                    null,
+                                    tint = OceanAccent
                                 )
                             }
                         }
