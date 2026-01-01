@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import com.divyansh.weatherly.ui.theme.WeatherlyTheme
 
 class MainActivity : ComponentActivity() {
@@ -12,9 +11,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            var isDarkMode by rememberSaveable { mutableStateOf(false) }
+
+            // 🔹 Theme state (THIS is what was missing)
+            var isDarkMode by remember { mutableStateOf(false) }
 
             WeatherlyTheme(darkTheme = isDarkMode) {
+
                 HomeScreen(
                     isDarkMode = isDarkMode,
                     onToggleTheme = { isDarkMode = !isDarkMode }
@@ -23,3 +25,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
