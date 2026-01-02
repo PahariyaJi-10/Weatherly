@@ -1,16 +1,18 @@
 package com.divyansh.weatherly
 
+import android.content.Context
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,7 +28,20 @@ fun HomeScreen(
     val weatherState by weatherViewModel.weatherState.collectAsState()
     var query by remember { mutableStateOf("") }
 
-    // ✅ THIS FIXES WHITE BACKGROUND
+    /* ⭐ Favourite list (SAFE) */
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("weatherly_prefs", Context.MODE_PRIVATE)
+
+    var favouriteCities by remember {
+        mutableStateOf(
+            prefs.getStringSet("favourite_cities", emptySet())!!.toMutableSet()
+        )
+    }
+
+    fun saveFavourites() {
+        prefs.edit().putStringSet("favourite_cities", favouriteCities).apply()
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -37,10 +52,9 @@ fun HomeScreen(
                 .padding(16.dp)
         ) {
 
-            /* 🔍 SEARCH BAR + 🌙 TOGGLE */
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            /* 🔍 SEARCH + ⭐ + 🌙 */
+            Row(verticalAlignment = Alignment.CenterVertically) {
+
                 OutlinedTextField(
                     value = query,
                     onValueChange = { query = it },
@@ -52,9 +66,7 @@ fun HomeScreen(
                         )
                     },
                     singleLine = true,
-                    leadingIcon = {
-                        Icon(Icons.Default.Search, null)
-                    },
+                    leadingIcon = { Icon(Icons.Default.Search, null) },
                     textStyle = LocalTextStyle.current.copy(
                         color = MaterialTheme.colorScheme.onSurface
                     ),
@@ -70,6 +82,28 @@ fun HomeScreen(
                     )
                 )
 
+                // ⭐ Add to favourites
+                IconButton(
+                    onClick = {
+                        if (query.isNotBlank()) {
+                            favouriteCities.add(query)
+                            favouriteCities = favouriteCities.toMutableSet()
+                            saveFavourites()
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector =
+                            if (favouriteCities.contains(query))
+                                Icons.Filled.Favorite
+                            else
+                                Icons.Outlined.FavoriteBorder,
+                        contentDescription = "Add favourite",
+                        tint = OceanAccent
+                    )
+                }
+
+                // 🌙 Theme toggle
                 IconButton(onClick = onToggleTheme) {
                     Icon(
                         imageVector = if (isDarkMode)
@@ -81,9 +115,33 @@ fun HomeScreen(
                 }
             }
 
+            /* ⭐ Favourite LIST */
+            if (favouriteCities.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "⭐ Favourites",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
+                favouriteCities.forEach { city ->
+                    Text(
+                        text = city,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                query = city
+                                weatherViewModel.fetchWeather(city)
+                            }
+                            .padding(vertical = 6.dp),
+                        color = OceanAccent
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
-            /* 🌦 WEATHER RESULT */
+            /* 🌦 WEATHER RESULT (UNCHANGED) */
             when (weatherState) {
                 WeatherUiState.Idle -> {
                     Text(
