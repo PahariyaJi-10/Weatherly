@@ -5,18 +5,17 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class WeatherViewModel : ViewModel() {
 
     private val _weatherState =
         MutableStateFlow<WeatherUiState>(WeatherUiState.Idle)
+
     val weatherState: StateFlow<WeatherUiState> = _weatherState
 
-    private val _favorites =
-        MutableStateFlow<Set<String>>(emptySet())
-    val favorites: StateFlow<Set<String>> = _favorites
-
-    private val apiKey = "6d1f33003b2afd1a9d717b682d6fd36b" // keep placeholder
+    private val apiKey = "6d1f33003b2afd1a9d717b682d6fd36b" // your API key
 
     fun fetchWeather(city: String) {
         if (city.isBlank()) return
@@ -36,14 +35,36 @@ class WeatherViewModel : ViewModel() {
 
                 val loc = locations.first()
 
-                val weather = RetrofitInstance.weatherApi
-                    .getWeatherByLatLon(
+                val weather =
+                    RetrofitInstance.weatherApi.getWeatherByLatLon(
                         lat = loc.lat,
                         lon = loc.lon,
                         apiKey = apiKey
                     )
 
-                _weatherState.value = WeatherUiState.Success(weather)
+                val forecast =
+                    RetrofitInstance.weatherApi.getHourlyForecast(
+                        lat = loc.lat,
+                        lon = loc.lon,
+                        apiKey = apiKey
+                    )
+
+                // ✅ TAKE NEXT 6 HOURS DYNAMICALLY
+                val formatter = DateTimeFormatter.ofPattern("HH:mm")
+
+                val hourly = forecast.list.take(6).map {
+                    HourlyForecastItem(
+                        time = LocalDateTime.parse(it.dt_txt.replace(" ", "T"))
+                            .format(formatter),
+                        temp = it.main.temp.toInt()
+                    )
+                }
+
+                _weatherState.value =
+                    WeatherUiState.Success(
+                        weather = weather,
+                        hourly = hourly
+                    )
 
             } catch (e: Exception) {
                 _weatherState.value =
@@ -51,12 +72,5 @@ class WeatherViewModel : ViewModel() {
             }
         }
     }
-
-    fun toggleFavorite(city: String) {
-        _favorites.value =
-            if (_favorites.value.contains(city))
-                _favorites.value - city
-            else
-                _favorites.value + city
-    }
 }
+

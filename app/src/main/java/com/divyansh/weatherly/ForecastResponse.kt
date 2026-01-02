@@ -12,3 +12,10 @@ data class ForecastItem(
 data class ForecastMain(
     val temp: Double
 )
+
+// UI-friendly model (IMPORTANT)
+data class HourlyForecast(
+    val time: String,
+    val temp: Int
+)
+
