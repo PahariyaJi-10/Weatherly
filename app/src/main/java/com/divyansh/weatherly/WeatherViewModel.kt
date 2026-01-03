@@ -5,8 +5,6 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 class WeatherViewModel : ViewModel() {
 
@@ -15,7 +13,7 @@ class WeatherViewModel : ViewModel() {
 
     val weatherState: StateFlow<WeatherUiState> = _weatherState
 
-    private val apiKey = "6d1f33003b2afd1a9d717b682d6fd36b" // your API key
+    private val apiKey = "6d1f33003b2afd1a9d717b682d6fd36b"
 
     fun fetchWeather(city: String) {
         if (city.isBlank()) return
@@ -49,14 +47,12 @@ class WeatherViewModel : ViewModel() {
                         apiKey = apiKey
                     )
 
-                // ✅ TAKE NEXT 6 HOURS DYNAMICALLY
-                val formatter = DateTimeFormatter.ofPattern("HH:mm")
-
+                // ✅ SAFE FOR ALL ANDROID VERSIONS
                 val hourly = forecast.list.take(6).map {
                     HourlyForecastItem(
-                        time = LocalDateTime.parse(it.dt_txt.replace(" ", "T"))
-                            .format(formatter),
-                        temp = it.main.temp.toInt()
+                        time = it.dt_txt.substring(11, 16), // HH:mm
+                        temp = it.main.temp.toInt(),
+                        condition = it.weather[0].main.lowercase()
                     )
                 }
 
@@ -73,4 +69,3 @@ class WeatherViewModel : ViewModel() {
         }
     }
 }
-

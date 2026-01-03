@@ -6,16 +6,16 @@ data class ForecastResponse(
 
 data class ForecastItem(
     val dt_txt: String,
-    val main: ForecastMain
+    val main: ForecastMain,
+    val weather: List<ForecastWeather> // ✅ THIS WAS MISSING
 )
 
 data class ForecastMain(
     val temp: Double
 )
 
-// UI-friendly model (IMPORTANT)
-data class HourlyForecast(
-    val time: String,
-    val temp: Int
+data class ForecastWeather(
+    val main: String,
+    val description: String
 )
 

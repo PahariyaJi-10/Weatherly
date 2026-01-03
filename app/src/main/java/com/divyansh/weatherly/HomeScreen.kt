@@ -19,6 +19,18 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.divyansh.weatherly.ui.theme.OceanAccent
 
+/* 🌦 WEATHER ICON HELPER (SAFE) */
+fun getWeatherIcon(condition: String): String {
+    return when {
+        condition.contains("clear", true) -> "☀️"
+        condition.contains("rain", true) -> "🌧"
+        condition.contains("cloud", true) -> "☁️"
+        condition.contains("snow", true) -> "❄️"
+        condition.contains("storm", true) -> "⛈"
+        else -> "🌦"
+    }
+}
+
 @Composable
 fun HomeScreen(
     isDarkMode: Boolean,
@@ -87,35 +99,25 @@ fun HomeScreen(
                 }
 
                 is WeatherUiState.Success -> {
+
                     val weather = state.weather
                     val hourly = state.hourly
-                    weather.weather[0].description.lowercase()
 
-                    // 🌦 WEATHER-BASED MESSAGE (NEW – SAFE)
-                    // 🌤 WEATHER-BASED MESSAGE (SAFE FIX)
-                    val weatherMessage = when {
-                        weather.weather[0].description.contains("clear", true) ->
-                            "☀️ Perfect day for a walk"
+                    /* 🧠 SMART WEATHER MESSAGE (SAFE) */
+                    val condition = weather.weather.firstOrNull()?.description?.lowercase() ?: ""
 
-                        weather.weather[0].description.contains("rain", true) ||
-                                weather.weather[0].description.contains("drizzle", true) ||
-                                weather.weather[0].description.contains("thunder", true) ->
-                            "🌧 Carry an umbrella"
 
-                        weather.weather[0].description.contains("snow", true) ->
-                            "❄️ It’s cold outside, stay warm"
-
-                        weather.weather[0].description.contains("cloud", true) ->
-                            "☁️ A calm and cozy day"
-
-                        else ->
-                            "🌈 Have a great day!"
+                    val weatherMessage = when (condition) {
+                        "clear" -> "☀️ Perfect day for a walk"
+                        "rain", "drizzle", "thunderstorm" -> "🌧 Carry an umbrella"
+                        "snow" -> "❄️ It’s cold outside, stay warm"
+                        "clouds" -> "☁️ A calm and cozy day"
+                        else -> "🌈 Have a great day!"
                     }
-
 
                     Column {
 
-                        // 🌦 MAIN WEATHER CARD
+                        /* 🌦 MAIN WEATHER CARD */
                         Card(
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -130,17 +132,18 @@ fun HomeScreen(
                             }
                         }
 
-                        // 🧠 SMART MESSAGE (NEW)
                         Spacer(modifier = Modifier.height(8.dp))
+
+                        /* 🧠 WEATHER MESSAGE */
                         Text(
                             text = weatherMessage,
                             fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onBackground
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // 💨💧 WIND + HUMIDITY
+                        /* 💨 WIND + 💧 HUMIDITY */
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -177,11 +180,14 @@ fun HomeScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // ⏰ HOURLY FORECAST (UNCHANGED)
+                        /* ⏰ HOURLY FORECAST */
                         Text("Hourly Forecast", fontSize = 16.sp)
 
                         LazyRow {
                             items(hourly) { item ->
+
+                                val icon = getWeatherIcon(item.condition)
+
                                 Card(
                                     modifier = Modifier
                                         .padding(end = 8.dp)
@@ -192,9 +198,16 @@ fun HomeScreen(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.Center
                                     ) {
-                                        Text(item.time)
+
+                                        Text(icon, fontSize = 22.sp)
                                         Spacer(modifier = Modifier.height(4.dp))
-                                        Text("${item.temp}°C", color = OceanAccent)
+                                        Text(item.time, fontSize = 12.sp)
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            "${item.temp}°C",
+                                            color = OceanAccent,
+                                            fontSize = 14.sp
+                                        )
                                     }
                                 }
                             }
