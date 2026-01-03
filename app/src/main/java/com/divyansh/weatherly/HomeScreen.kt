@@ -87,13 +87,12 @@ fun HomeScreen(
                 }
 
                 is WeatherUiState.Success -> {
-
                     val weather = state.weather
                     val hourly = state.hourly
 
                     Column {
 
-                        /* CURRENT WEATHER */
+                        // 🌦 MAIN WEATHER CARD
                         Card(
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -108,15 +107,55 @@ fun HomeScreen(
                             }
                         }
 
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // 💨💧 WIND + HUMIDITY MINI CARDS
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+
+                            Card(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text("💨 Wind")
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        "${weather.wind.speed} m/s",
+                                        color = OceanAccent,
+                                        fontSize = 16.sp
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Card(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text("💧 Humidity")
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        "${weather.main.humidity}%",
+                                        color = OceanAccent,
+                                        fontSize = 16.sp
+                                    )
+                                }
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        /* ⏰ HOURLY FORECAST */
-                        Text(
-                            "Hourly Forecast",
-                            fontSize = 16.sp
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
+                        // ⏰ HOURLY FORECAST (UNCHANGED)
+                        Text("Hourly Forecast", fontSize = 16.sp)
 
                         LazyRow {
                             items(hourly) { item ->
@@ -132,16 +171,14 @@ fun HomeScreen(
                                     ) {
                                         Text(item.time)
                                         Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            "${item.temp}°C",
-                                            color = OceanAccent
-                                        )
+                                        Text("${item.temp}°C", color = OceanAccent)
                                     }
                                 }
                             }
                         }
                     }
                 }
+
             }
         }
     }
