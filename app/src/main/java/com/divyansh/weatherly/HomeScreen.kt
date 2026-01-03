@@ -89,6 +89,29 @@ fun HomeScreen(
                 is WeatherUiState.Success -> {
                     val weather = state.weather
                     val hourly = state.hourly
+                    weather.weather[0].description.lowercase()
+
+                    // 🌦 WEATHER-BASED MESSAGE (NEW – SAFE)
+                    // 🌤 WEATHER-BASED MESSAGE (SAFE FIX)
+                    val weatherMessage = when {
+                        weather.weather[0].description.contains("clear", true) ->
+                            "☀️ Perfect day for a walk"
+
+                        weather.weather[0].description.contains("rain", true) ||
+                                weather.weather[0].description.contains("drizzle", true) ||
+                                weather.weather[0].description.contains("thunder", true) ->
+                            "🌧 Carry an umbrella"
+
+                        weather.weather[0].description.contains("snow", true) ->
+                            "❄️ It’s cold outside, stay warm"
+
+                        weather.weather[0].description.contains("cloud", true) ->
+                            "☁️ A calm and cozy day"
+
+                        else ->
+                            "🌈 Have a great day!"
+                    }
+
 
                     Column {
 
@@ -107,46 +130,46 @@ fun HomeScreen(
                             }
                         }
 
+                        // 🧠 SMART MESSAGE (NEW)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = weatherMessage,
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // 💨💧 WIND + HUMIDITY MINI CARDS
+                        // 💨💧 WIND + HUMIDITY
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
 
-                            Card(
-                                modifier = Modifier.weight(1f)
-                            ) {
+                            Card(modifier = Modifier.weight(1f)) {
                                 Column(
                                     modifier = Modifier.padding(12.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text("💨 Wind")
-                                    Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         "${weather.wind.speed} m/s",
-                                        color = OceanAccent,
-                                        fontSize = 16.sp
+                                        color = OceanAccent
                                     )
                                 }
                             }
 
                             Spacer(modifier = Modifier.width(12.dp))
 
-                            Card(
-                                modifier = Modifier.weight(1f)
-                            ) {
+                            Card(modifier = Modifier.weight(1f)) {
                                 Column(
                                     modifier = Modifier.padding(12.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text("💧 Humidity")
-                                    Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         "${weather.main.humidity}%",
-                                        color = OceanAccent,
-                                        fontSize = 16.sp
+                                        color = OceanAccent
                                     )
                                 }
                             }
@@ -178,7 +201,6 @@ fun HomeScreen(
                         }
                     }
                 }
-
             }
         }
     }
