@@ -114,6 +114,20 @@ fun HomeScreen(
                         "clouds" -> "☁️ A calm and cozy day"
                         else -> "🌈 Have a great day!"
                     }
+// 👕 CLOTHING SUGGESTION (SAFE & SIMPLE)
+                    val clothingSuggestion = when {
+                        weather.main.temp <= 10 ->
+                            "🧥 Wear a jacket, it's cold!"
+
+                        weather.weather[0].description.contains("rain", true) ->
+                            "👟 Waterproof shoes recommended!"
+
+                        weather.main.temp >= 30 ->
+                            "👕 Light cotton clothes recommended!"
+
+                        else ->
+                            "🙂 Comfortable clothing is fine!"
+                    }
 
                     Column {
 
@@ -139,6 +153,13 @@ fun HomeScreen(
                             text = weatherMessage,
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = clothingSuggestion,
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
