@@ -18,6 +18,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.divyansh.weatherly.ui.theme.OceanAccent
+import android.content.Context
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
+
 
 /* 🌦 WEATHER ICON HELPER (SAFE) */
 fun getWeatherIcon(condition: String): String {
@@ -40,6 +46,19 @@ fun HomeScreen(
     val weatherState by weatherViewModel.weatherState.collectAsState()
 
     var query by remember { mutableStateOf("") }
+// ⭐ FAVOURITES (SAFE LOCAL STORAGE)
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("weatherly_prefs", Context.MODE_PRIVATE)
+
+    var favouriteCities by remember {
+        mutableStateOf(
+            prefs.getStringSet("favourite_cities", emptySet())!!.toMutableSet()
+        )
+    }
+
+    fun saveFavourites() {
+        prefs.edit().putStringSet("favourite_cities", favouriteCities).apply()
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -79,6 +98,31 @@ fun HomeScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+// ⭐ FAVOURITES LIST
+            if (favouriteCities.isNotEmpty()) {
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "⭐ Favourites",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                favouriteCities.forEach { city ->
+                    Text(
+                        text = city,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                query = city
+                                weatherViewModel.fetchWeather(city)
+                            }
+                            .padding(vertical = 6.dp),
+                        color = OceanAccent
+                    )
+                }
+            }
 
             /* 🌦 WEATHER RESULT */
             when (val state = weatherState) {
@@ -181,6 +225,29 @@ fun HomeScreen(
                                         color = OceanAccent
                                     )
                                 }
+                            }
+                            IconButton(
+                                onClick = {
+                                    if (query.isNotBlank()) {
+                                        if (favouriteCities.contains(query)) {
+                                            favouriteCities.remove(query)
+                                        } else {
+                                            favouriteCities.add(query)
+                                        }
+                                        favouriteCities = favouriteCities.toMutableSet()
+                                        saveFavourites()
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector =
+                                        if (favouriteCities.contains(query))
+                                            Icons.Default.Favorite
+                                        else
+                                            Icons.Outlined.FavoriteBorder,
+                                    contentDescription = "Favourite city",
+                                    tint = OceanAccent
+                                )
                             }
 
                             Spacer(modifier = Modifier.width(12.dp))
