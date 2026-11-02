@@ -66,9 +66,7 @@ Important: Never upload your personal API key to a public GitHub repository.
 - Click the Run button in Android Studio.
 - Search for a city to explore its weather information.
 
-📸 Screenshots
 
-Add your application screenshots here.
 
 Home Screen| Weather Details
 Add Screenshot| Add Screenshot
