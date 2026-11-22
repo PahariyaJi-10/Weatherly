@@ -42,7 +42,6 @@ Follow these steps to run the project locally.
 
 1. Clone the Repository
 
-git clone 
 
 2. Open the Project
 
@@ -91,7 +90,3 @@ This project demonstrates practical implementation of Android development concep
 Divyansh Pahariya
 
 Developed as an Android application development project using Kotlin and Jetpack Compose.
-
----
-
-⭐ If you like this project, consider giving it a star!
