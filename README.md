@@ -89,4 +89,3 @@ This project demonstrates practical implementation of Android development concep
 
 Divyansh Pahariya
 
-Developed as an Android application development project using Kotlin and Jetpack Compose.
